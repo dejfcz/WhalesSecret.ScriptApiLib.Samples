@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
@@ -196,9 +197,10 @@ public class Telegram : IAsyncDisposable
     /// <param name="imageBytes">Binary representation of the image to send. Common image formats such as .PNG or .JPG are supported.</param>
     /// <param name="caption">Image caption.</param>
     /// <param name="filename">Name of the image file.</param>
+    /// <param name="mediaTypeHeader">Image type. This can be <c>image/png</c> for PNG file, or <c>image/jpeg</c> for JPG file.</param>
     /// <param name="cancellationToken">Cancellation token that allows the caller to cancel the operation.</param>
     /// <returns>If the function succeeds, the return value is <c>null</c>. Otherwise, the return value is an error message.</returns>
-    public async Task<string?> SendImageAsync(byte[] imageBytes, string caption, string filename, CancellationToken cancellationToken)
+    public async Task<string?> SendImageAsync(byte[] imageBytes, string caption, string filename, string mediaTypeHeader, CancellationToken cancellationToken)
     {
         using MultipartFormDataContent content = new();
 
@@ -212,6 +214,8 @@ public class Telegram : IAsyncDisposable
         content.Add(captionContent, "caption");
 
         using ByteArrayContent imageContent = new(imageBytes);
+        imageContent.Headers.ContentType = new MediaTypeHeaderValue(mediaTypeHeader);
+
         content.Add(imageContent, name: "photo", fileName: filename);
 
         string? error = null;
