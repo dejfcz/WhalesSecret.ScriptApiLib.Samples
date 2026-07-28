@@ -199,9 +199,13 @@ public class Telegram : IAsyncDisposable
     /// <param name="caption">Image caption.</param>
     /// <param name="filename">Name of the image file.</param>
     /// <param name="mediaTypeHeader">Image type. See <see cref="MediaTypeNames.Image"/> for possible values.</param>
+    /// <param name="sendAsDocument">
+    /// <c>true</c> to send the picture as a document, <c>false</c> to send as a photo. If this is <c>true</c> the image will not be converted to low quality JPEG by Telegram
+    /// but it may not have a preview in the Telegram client.
+    /// </param>
     /// <param name="cancellationToken">Cancellation token that allows the caller to cancel the operation.</param>
     /// <returns>If the function succeeds, the return value is <c>null</c>. Otherwise, the return value is an error message.</returns>
-    public async Task<string?> SendImageAsync(byte[] imageBytes, string caption, string filename, string mediaTypeHeader, CancellationToken cancellationToken)
+    public async Task<string?> SendImageAsync(byte[] imageBytes, string caption, string filename, string mediaTypeHeader, bool sendAsDocument, CancellationToken cancellationToken)
     {
         using MultipartFormDataContent content = new();
 
@@ -217,12 +221,14 @@ public class Telegram : IAsyncDisposable
         using ByteArrayContent imageContent = new(imageBytes);
         imageContent.Headers.ContentType = new MediaTypeHeaderValue(mediaTypeHeader);
 
-        content.Add(imageContent, name: "document", fileName: filename);
+        content.Add(imageContent, name: sendAsDocument ? "document" : "photo", fileName: filename);
 
         string? error = null;
         try
         {
-            Uri uri = new($"https://api.telegram.org/bot{this.apiToken}/sendDocument");
+            string action = sendAsDocument ? "sendDocument" : "sendPhoto";
+            Uri uri = new($"https://api.telegram.org/bot{this.apiToken}/{action}");
+
             using HttpResponseMessage response = await this.httpClient.PostAsync(uri, content, cancellationToken).ConfigureAwait(false);
             string responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
