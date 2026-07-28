@@ -217,12 +217,12 @@ public class Telegram : IAsyncDisposable
         using ByteArrayContent imageContent = new(imageBytes);
         imageContent.Headers.ContentType = new MediaTypeHeaderValue(mediaTypeHeader);
 
-        content.Add(imageContent, name: "photo", fileName: filename);
+        content.Add(imageContent, name: "document", fileName: filename);
 
         string? error = null;
         try
         {
-            Uri uri = new($"https://api.telegram.org/bot{this.apiToken}/sendPhoto");
+            Uri uri = new($"https://api.telegram.org/bot{this.apiToken}/sendDocument");
             using HttpResponseMessage response = await this.httpClient.PostAsync(uri, content, cancellationToken).ConfigureAwait(false);
             string responseContent = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
 
